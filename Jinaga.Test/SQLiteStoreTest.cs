@@ -49,6 +49,25 @@ namespace Jinaga.Test
 
 
         [Fact]
+        public async Task CanQueryForSuccessors()
+        {
+            var j = new Jinaga(new SQLiteStore(), new LocalNetwork());
+            var airlineDay = await j.Fact(new AirlineDay(new Airline("IA"), DateTime.Today));
+            var flight = await j.Fact(new Flight(airlineDay, 4247));
+
+            var specification = Given<AirlineDay>.Match((airlineDay, facts) =>
+                from flight in facts.OfType<Flight>()
+                where flight.airlineDay == airlineDay
+                select flight
+            );
+            var flights = await j.Query(airlineDay, specification);
+
+            flights.Should().ContainSingle().Which.Should().BeEquivalentTo(flight);
+        }
+
+
+
+        [Fact]
         public async Task StoreRoundTripToUTC()
         {
             output.WriteLine($"{MyStopWatch.Start()}: BEGIN OF TESTS at {DateTime.Now}");
