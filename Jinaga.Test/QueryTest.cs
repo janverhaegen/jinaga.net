@@ -34,8 +34,14 @@ namespace Jinaga.Test
         [Fact]
         public async Task CanQueryForSuccessors()
         {
-            var airlineDay = await j.Fact(new AirlineDay(new Airline("IA"), DateTime.Today));
+            //var airlineDay = await j.Fact(new AirlineDay(new Airline("IA"), DateTime.Today));
+
+            var airlineDay = await j.Fact(new AirlineDay(new Airline("IA"), DateTime.Parse("2021-07-04T01:39:43.241Z").Date));
             var flight = await j.Fact(new Flight(airlineDay, 4247));
+
+            //var airlineDay = new AirlineDay(new Airline("IA"), DateTime.Parse("2021-07-04T01:39:43.241Z").ToUniversalTime().Date);
+            //var flight = new Flight(airlineDay, 4247);
+            //var flight2 = j.Fact(flight);
 
             var specification = Given<AirlineDay>.Match((airlineDay, facts) =>
                 from flight in facts.OfType<Flight>()

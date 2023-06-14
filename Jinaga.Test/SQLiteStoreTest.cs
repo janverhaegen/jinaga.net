@@ -17,6 +17,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
+iusing Jinaga.Graphviz;
+using Microsoft.AspNetCore.Html;
+using static System.Net.Mime.MediaTypeNames;
+using Jinaga.Http;
 
 namespace Jinaga.Test
 {
@@ -52,27 +56,47 @@ namespace Jinaga.Test
         public async Task CanQueryForSuccessors()
         {
             var j = new Jinaga(new SQLiteStore(), new LocalNetwork());
-            var airlineDay = await j.Fact(new AirlineDay(new Airline("IA"), DateTime.Today));
+            //var j = new Jinaga(new SQLiteStore(), new HttpNetwork());
+            var airlineDay = await j.Fact(new AirlineDay(new Airline("IA"), DateTime.Parse("2021-07-04T01:39:43.241Z").Date));
             var flight = await j.Fact(new Flight(airlineDay, 4247));
 
+            //var msg = (Renderer.RenderFacts(new object[] { flight }));            
+            //DisplayInBrowser(msg);
+
+           
             var specification = Given<AirlineDay>.Match((airlineDay, facts) =>
                 from flight in facts.OfType<Flight>()
                 where flight.airlineDay == airlineDay
-                select flight
+                select flight.flightNumber
             );
-            var flights = await j.Query(airlineDay, specification);
 
-            flights.Should().ContainSingle().Which.Should().BeEquivalentTo(flight);
+            var flightNumbers = await j.Query(airlineDay, specification);
+            flightNumbers.Should().ContainSingle().Which.Should().Be(4247);
+
+            //var flights = await j.Query(airlineDay, specification);
+
+            //flights.Should().ContainSingle().Which.Should().BeEquivalentTo(flight);
         }
 
+        public static void DisplayInBrowser(HtmlString input)
+        {
+            var psi = new ProcessStartInfo()
+            {
+                FileName = "msedge.exe",
+                UseShellExecute = true,
+                Arguments = "data:text/html," + Uri.EscapeDataString(input.ToString())
+            };
+            Process.Start(psi);
+        }
 
+     
 
         [Fact]
         public async Task StoreRoundTripToUTC()
         {
             output.WriteLine($"{MyStopWatch.Start()}: BEGIN OF TESTS at {DateTime.Now}");
          
-            DateTime now = DateTime.Parse("2021-07-04T01:39:43.241Z");
+            DateTime now = DateTime.Parse("2021-07-04T01:39:43.241Z").Date;
             var j = new Jinaga(new SQLiteStore(), new LocalNetwork());            
             var airlineDay = await j.Fact(new AirlineDay(new Airline("Airline1"), now));
             var flight = await j.Fact(new Flight(airlineDay, 555));
